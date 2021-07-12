@@ -8,6 +8,9 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -23,13 +26,22 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
+    static ArrayList<String> activeCases=new ArrayList<>();
+    static ArrayList<String> newInfected=new ArrayList<>();
+    static ArrayList<String> recovered=new ArrayList<>();
+    static ArrayList<String> newRecovered=new ArrayList<>();
+    static ArrayList<String> totalInfected=new ArrayList<>();
+    static ArrayList<String> region=new ArrayList<>();
+    ArrayAdapter<String> arrayAdapter;
+
 TextView activecases;
 TextView recoveredcases;
 TextView totalcases;
 TextView testedyesterday;
-GraphView graphView;
+ListView listView;
 int a,b,c,d;
 
 
@@ -76,26 +88,30 @@ int a,b,c,d;
                 c=Integer.parseInt(three);
                 four=jsonObject.getString("previousDayTests");
                 d=Integer.parseInt(four);
-                BarGraphSeries<DataPoint> series=new BarGraphSeries<>(getDataPoint());
-                graphView.addSeries(series);
-                series.setDrawValuesOnTop(true);
-                series.setValuesOnTopColor(Color.BLACK);
-                series.setSpacing(10);
                 activecases.setText(one);
                 recoveredcases.setText(two);
                 totalcases.setText(three);
                 testedyesterday.setText(four);
-
-
-
-/*
-                JSONArray array=new JSONArray("cases12");
+                //JSONObject jsonObject1=new JSONObject(s);
+                String s1=jsonObject.getString("regionData");
+                JSONArray array=new JSONArray(s1);
 
                 for(int i=0;i<array.length();i++)
                 {
-                    JSONObject jsonPart=array.getJSONObject(i);
-                    Log.i("main",jsonPart.getString("activecases12"));
-                }*/
+                    JSONObject jsonpart=array.getJSONObject(i);
+                    region.add(jsonpart.getString("region"));
+                    activeCases.add(jsonpart.getString("activeCases"));
+                    newInfected.add(jsonpart.getString("newInfected"));
+                    recovered.add(jsonpart.getString("recovered"));
+                    newRecovered.add(jsonpart.getString("newRecovered"));
+                    totalInfected.add(jsonpart.getString("totalInfected"));
+
+                }
+                arrayAdapter.notifyDataSetChanged();
+
+
+
+
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -110,9 +126,9 @@ int a,b,c,d;
         recoveredcases=findViewById(R.id.recoveredcases);
         totalcases=findViewById(R.id.totalcases);
         testedyesterday=findViewById(R.id.testedyesterday);
-        graphView=(GraphView) findViewById(R.id.graphview);
-
-
+        listView=findViewById(R.id.listView);
+        arrayAdapter=new ArrayAdapter<>(this,android.R.layout.simple_list_item_1,region);
+        listView.setAdapter(arrayAdapter);
         DownloadTask task=new DownloadTask();
 
         try {
@@ -125,18 +141,17 @@ int a,b,c,d;
             e.printStackTrace();
         }
 
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Intent intent=new Intent(getApplicationContext(),statewisedata.class);
+                intent.putExtra("index",position);
+
+
+                startActivity(intent);
+            }
+        });
+
     }
 
-    private DataPoint[] getDataPoint() {
-        DataPoint[] dp=new DataPoint[] {
-                new DataPoint(1,a),
-                new DataPoint(2,b),
-                new DataPoint(3,c),
-                new DataPoint(4,d)
-
-
-
-        };
-        return (dp);
-    }
 }
